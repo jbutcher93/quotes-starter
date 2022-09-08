@@ -20,13 +20,17 @@ var quotes = []quote{
 	{Quote: "I can do this for the smallest and most subtle of details, since I care about Go a lot. I can reuse this each time the same issue comes up, instead of having to re-write the rationale multiple times, or skip explaining why I make a given suggestion.", Author: "Dmitri Shuralyov"},
 }
 
-func getQuote(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, quotes[rand.Intn(len(quotes)-0)+0])
+func getQuote() quote {
+	return quotes[rand.Intn(len(quotes)-0)+0]
+}
+
+func returnQuote(c *gin.Context) {
+	c.IndentedJSON(http.StatusOK, getQuote())
 }
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	router := gin.Default()
-	router.GET("/quotes", getQuote)
-	router.Run("localhost:8080")
+	router.GET("/quotes", returnQuote)
+	router.Run("0.0.0.0:8080")
 }
