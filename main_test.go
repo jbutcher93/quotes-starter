@@ -6,7 +6,7 @@ import (
 
 func TestGetQuote(t *testing.T) {
 
-	sut := getQuote()
+	sut := getRandomQuote()
 	if len(sut.Author) <= 0 {
 		t.Error()
 	}
