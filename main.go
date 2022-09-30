@@ -1,14 +1,22 @@
 package main
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
+	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	_ "github.com/jackc/pgx/v4/stdlib"
+	// Note: If connecting using the App Engine Flex Go runtime, use
+	// "github.com/jackc/pgx/stdlib" instead, since v4 requires
+	// Go modules which are not supported by App Engine Flex.
 )
 
 type quote struct {
@@ -21,25 +29,44 @@ type id struct {
 	ID string `json:"id"`
 }
 
-var quotes = map[string]quote{
-	"b513f4ec-ddd8-4d54-ae47-d78a2ab43612": {ID: "b513f4ec-ddd8-4d54-ae47-d78a2ab43612", Quote: "Don't communicate by sharing memory, share memory by communicating.", Author: "Rob Pike"},
-	"dd50bc8d-17cc-4bf9-a5ce-674d9e501408": {ID: "dd50bc8d-17cc-4bf9-a5ce-674d9e501408", Quote: "Concurrency is not parallelism.", Author: "Rob Pike"},
-	"fe4a522e-d668-4e51-85aa-65be75049618": {ID: "fe4a522e-d668-4e51-85aa-65be75049618", Quote: "Clear is better than clever.", Author: "Rob Pike"},
-	"20f41f99-159d-4539-9182-3c3e531ebbf9": {ID: "20f41f99-159d-4539-9182-3c3e531ebbf9", Quote: "When reviewing Go code, if I run into a situation where I see an unnecessary deviation from idiomatic Go style or best practice, I add an entry here complete with some rationale, and link to it.", Author: "Dmitri Shuralyov"},
-	"b0372040-94aa-4f1f-b905-05ee2e2efecd": {ID: "b0372040-94aa-4f1f-b905-05ee2e2efecd", Quote: "I can do this for the smallest and most subtle of details, since I care about Go a lot. I can reuse this each time the same issue comes up, instead of having to re-write the rationale multiple times, or skip explaining why I make a given suggestion.", Author: "Dmitri Shuralyov"},
+var db *sql.DB
+
+func databaseConnection() error {
+	mustGetenv := func(dns string) string {
+		gettingEnv := os.Getenv(dns)
+		if gettingEnv == "" {
+			log.Printf("Warning: %s environment variable not set", dns)
+		}
+		return gettingEnv
+	}
+
+	var (
+		dbUser         = os.Getenv("DB_USER") //postgres
+		dbPwd          = mustGetenv("DB_PASS")
+		dbName         = mustGetenv("DB_NAME") //quotes_database
+		unixSocketPath = mustGetenv("INSTANCE_UNIX_SOCKET")
+	)
+
+	dbURI := fmt.Sprintf("user=%s password=%s database=%s host=%s", dbUser, dbPwd, dbName, unixSocketPath)
+
+	//dbPool is the pool of database connections
+	var err error
+
+	db, err = sql.Open("pgx", dbURI)
+	if err != nil {
+		return fmt.Errorf("sql.Open: %v", err)
+	}
+	return err
 }
 
 func getRandomQuote() *quote {
-	randNum := (rand.Intn(len(quotes)))
-	counter := 0
-
-	for _, v := range quotes {
-		if randNum == counter {
-			return &v
-		}
-		counter++
+	row := db.QueryRow("SELECT * FROM quotes ORDER BY RANDOM () LIMIT 1;")
+	q := &quote{}
+	err := row.Scan(&q.ID, &q.Quote, &q.Author)
+	if err != nil {
+		log.Println(err)
 	}
-	return nil
+	return q
 }
 
 func returnRandomQuote(c *gin.Context) {
@@ -50,12 +77,14 @@ func returnRandomQuote(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, getRandomQuote())
 }
 
-func getQuoteWithID(id string) (quote, error) {
-	v, ok := quotes[id]
-	if !ok {
-		return quote{}, errors.New("this quote ID does not match any of our records")
+func getQuoteWithId(id string) *quote {
+	row := db.QueryRow(fmt.Sprintf("select * from quotes where ID = '%s'", id))
+	q := &quote{}
+	err := row.Scan(&q.ID, &q.Quote, &q.Author)
+	if err != nil {
+		log.Println(err)
 	}
-	return v, nil
+	return q
 }
 
 func returnQuoteWithId(c *gin.Context) {
@@ -64,11 +93,10 @@ func returnQuoteWithId(c *gin.Context) {
 	}
 
 	id := c.Param("id")
-	quote, err := getQuoteWithID(id)
+	quote := getQuoteWithId(id)
 
-	if err != nil {
+	if quote.ID == "" {
 		c.AbortWithStatus(404)
-		fmt.Println(err)
 		return
 	}
 
@@ -99,7 +127,7 @@ func postQuote(c *gin.Context) {
 	}
 
 	newQuote.ID = createID()
-	quotes[newQuote.ID] = newQuote
+	db.Exec("INSERT INTO quotes (id, author, phrase) VALUES ($1, $2, $3);", &newQuote.ID, &newQuote.Author, &newQuote.Quote)
 	id := id{newQuote.ID}
 	c.IndentedJSON(http.StatusCreated, id)
 }
@@ -134,6 +162,10 @@ func createID() string {
 }
 
 func main() {
+	err := databaseConnection()
+	if err != nil {
+		log.Println(err)
+	}
 	rand.Seed(time.Now().UnixNano())
 	router := gin.Default()
 	router.GET("/quotes", returnRandomQuote)
