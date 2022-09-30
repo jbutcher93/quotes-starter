@@ -1,6 +1,9 @@
 drop table if exists quotes;
 
-create table quotes (ID varchar(200) primary key not null unique, phrase varchar(500), author varchar(50));
+create table quotes 
+(ID varchar(200) primary key not null unique, 
+phrase varchar(500), 
+author varchar(50));
 
 insert into quotes(ID, phrase, author) values
     ('b513f4ec-ddd8-4d54-ae47-d78a2ab436', 'Don''t communicate by sharing memory, share memory by communicating.', 'Rob Pike'),

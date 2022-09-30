@@ -119,17 +119,33 @@ func postQuote(c *gin.Context) {
 	}
 
 	if len(validator) > 0 {
+		output := ""
 		for _, v := range validator {
-			fmt.Println(v)
+			output += v.Error() + ". "
 		}
-		c.AbortWithStatus(400)
+		c.JSON(http.StatusBadRequest, gin.H{"message": output})
 		return
 	}
 
 	newQuote.ID = createID()
-	db.Exec("INSERT INTO quotes (id, author, phrase) VALUES ($1, $2, $3);", &newQuote.ID, &newQuote.Author, &newQuote.Quote)
+	db.Exec("INSERT INTO quotes (id, author, phrase) VALUES ($ID, $Author, $Quote);", &newQuote.ID, &newQuote.Author, &newQuote.Quote)
 	id := id{newQuote.ID}
 	c.IndentedJSON(http.StatusCreated, id)
+}
+
+func deleteQuote(c *gin.Context) {
+	if validateKey(c) != nil {
+		return
+	}
+
+	id := c.Param("id")
+	q := getQuoteWithId(id)
+	if q.ID != "" {
+		db.Exec(fmt.Sprintf("DELETE FROM quotes WHERE id = '%s'", id))
+		c.AbortWithStatus(204)
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "ID not found."})
+	}
 }
 
 func validateStruct(q *quote) []error {
@@ -171,5 +187,6 @@ func main() {
 	router.GET("/quotes", returnRandomQuote)
 	router.GET("/quotes/:id", returnQuoteWithId)
 	router.POST("/quotes", postQuote)
+	router.DELETE("/quotes/:id", deleteQuote)
 	router.Run("0.0.0.0:8080")
 }
