@@ -128,7 +128,8 @@ func postQuote(c *gin.Context) {
 	}
 
 	newQuote.ID = createID()
-	db.Exec("INSERT INTO quotes (id, author, phrase) VALUES ($ID, $Author, $Quote);", &newQuote.ID, &newQuote.Author, &newQuote.Quote)
+	sqlStatement := `INSERT INTO quotes (id, author, phrase) VALUES ($1, $2, $3);`
+	db.Exec(sqlStatement, newQuote.ID, newQuote.Author, newQuote.Quote)
 	id := id{newQuote.ID}
 	c.IndentedJSON(http.StatusCreated, id)
 }
