@@ -43,13 +43,12 @@ func databaseConnection() error {
 	var (
 		dbUser         = os.Getenv("DB_USER") //postgres
 		dbPwd          = mustGetenv("DB_PASS")
-		dbName         = mustGetenv("DB_NAME") //quotes_database
+		dbName         = mustGetenv("DB_NAME") //postgres
 		unixSocketPath = mustGetenv("INSTANCE_UNIX_SOCKET")
 	)
 
 	dbURI := fmt.Sprintf("user=%s password=%s database=%s host=%s", dbUser, dbPwd, dbName, unixSocketPath)
 
-	//dbPool is the pool of database connections
 	var err error
 
 	db, err = sql.Open("pgx", dbURI)
