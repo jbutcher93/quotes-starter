@@ -2,13 +2,18 @@
 #
 # https://gqlgen.com/getting-started/
 
+#Model of Quote object
 type Quote {
+  #UUID parsed to String that is unique for each Quote instace
   id: String!
+  #Author of the Quote instance phrase
   author: String!
+  #Phrase is the quote attributed to the author
   phrase: String!
 }
 
 type Query {
+  #Returns an array of all Quote instances
   quotes: [Quote]
 }
 
