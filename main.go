@@ -14,9 +14,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v4/stdlib"
-	// Note: If connecting using the App Engine Flex Go runtime, use
-	// "github.com/jackc/pgx/stdlib" instead, since v4 requires
-	// Go modules which are not supported by App Engine Flex.
 )
 
 type quote struct {
@@ -68,7 +65,7 @@ func getRandomQuote() *quote {
 	return q
 }
 
-func returnRandomQuote(c *gin.Context) {
+func ReturnRandomQuote(c *gin.Context) {
 	if validateKey(c) != nil {
 		return
 	}
