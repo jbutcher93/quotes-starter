@@ -5,7 +5,7 @@
 #Model of Quote object
 type Quote {
   #UUID parsed to String that is unique for each Quote instance
-  id: String!
+  id: String
   #Author of the Quote instance phrase
   author: String!
   #Quote is the quote attributed to the author
@@ -19,3 +19,11 @@ type Query {
   quoteById(id: String): Quote
 }
 
+input QuoteInput {
+  author: String!
+  quote: String!
+}
+
+type Mutation {
+  insertQuote(input: QuoteInput): Quote
+}

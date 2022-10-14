@@ -100,9 +100,9 @@ func returnQuoteWithId(c *gin.Context) {
 }
 
 func postQuote(c *gin.Context) {
-	if validateKey(c) != nil {
-		return
-	}
+	// if validateKey(c) != nil {
+	// 	return
+	// }
 
 	var newQuote quote
 	err := c.BindJSON(&newQuote)

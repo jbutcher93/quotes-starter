@@ -3,7 +3,12 @@
 package model
 
 type Quote struct {
-	ID     string `json:"id"`
+	ID     *string `json:"id"`
+	Author string  `json:"author"`
+	Quote  string  `json:"quote"`
+}
+
+type QuoteInput struct {
 	Author string `json:"author"`
 	Quote  string `json:"quote"`
 }
