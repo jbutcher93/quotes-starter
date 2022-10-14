@@ -5,5 +5,5 @@ package model
 type Quote struct {
 	ID     string `json:"id"`
 	Author string `json:"author"`
-	Phrase string `json:"phrase"`
+	Quote  string `json:"quote"`
 }

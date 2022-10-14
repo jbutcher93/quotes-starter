@@ -65,10 +65,10 @@ func getRandomQuote() *quote {
 	return q
 }
 
-func ReturnRandomQuote(c *gin.Context) {
-	if validateKey(c) != nil {
-		return
-	}
+func returnRandomQuote(c *gin.Context) {
+	// if validateKey(c) != nil {
+	// 	return
+	// }
 
 	c.IndentedJSON(http.StatusOK, getRandomQuote())
 }
@@ -185,5 +185,5 @@ func main() {
 	router.GET("/quotes/:id", returnQuoteWithId)
 	router.POST("/quotes", postQuote)
 	router.DELETE("/quotes/:id", deleteQuote)
-	router.Run("0.0.0.0:8080")
+	router.Run("0.0.0.0:8082")
 }
