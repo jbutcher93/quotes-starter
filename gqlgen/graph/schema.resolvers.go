@@ -8,23 +8,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 
 	"github.com/jbutcher93/quotes-starter/gqlgen/graph/generated"
 	"github.com/jbutcher93/quotes-starter/gqlgen/graph/model"
+	"github.com/jbutcher93/quotes-starter/helpers"
 )
-
-func makeRequest(url string, requestType string) *http.Response {
-	client := &http.Client{}
-	req, _ := http.NewRequest(requestType, url, nil)
-	req.Header.Set("X-Api-Key", "COCKTAILSAUCE")
-	response, _ := client.Do(req)
-	return response
-}
 
 // RandomQuote is the resolver for the randomQuote field.
 func (r *queryResolver) RandomQuote(ctx context.Context) (*model.Quote, error) {
-	response := makeRequest("http://0.0.0.0:8082/quotes", "GET")
+	response := helpers.MakeRequest("http://0.0.0.0:8082/quotes", "GET")
 	responseData, _ := io.ReadAll(response.Body)
 	var randomQuote *model.Quote
 	json.Unmarshal(responseData, &randomQuote)
@@ -33,7 +25,7 @@ func (r *queryResolver) RandomQuote(ctx context.Context) (*model.Quote, error) {
 
 // QuoteByID is the resolver for the quoteById field.
 func (r *queryResolver) QuoteByID(ctx context.Context, id *string) (*model.Quote, error) {
-	response := makeRequest(fmt.Sprintf("http://0.0.0.0:8082/quotes/%s", *id), "GET")
+	response := helpers.MakeRequest(fmt.Sprintf("http://0.0.0.0:8082/quotes/%s", *id), "GET")
 	responseData, _ := io.ReadAll(response.Body)
 	var randomQuote *model.Quote
 	json.Unmarshal(responseData, &randomQuote)
