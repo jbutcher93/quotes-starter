@@ -15,5 +15,7 @@ type Quote {
 type Query {
   #Returns a random quote
   randomQuote: Quote
+  #Returns a quote by id
+  quoteById(id: String): Quote
 }
 

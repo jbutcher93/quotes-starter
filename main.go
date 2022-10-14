@@ -66,9 +66,9 @@ func getRandomQuote() *quote {
 }
 
 func returnRandomQuote(c *gin.Context) {
-	// if validateKey(c) != nil {
-	// 	return
-	// }
+	if validateKey(c) != nil {
+		return
+	}
 
 	c.IndentedJSON(http.StatusOK, getRandomQuote())
 }
