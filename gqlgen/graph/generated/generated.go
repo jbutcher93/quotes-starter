@@ -43,18 +43,20 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Query struct {
-		Quotes func(childComplexity int) int
+		QuoteByID   func(childComplexity int, id *string) int
+		RandomQuote func(childComplexity int) int
 	}
 
 	Quote struct {
 		Author func(childComplexity int) int
 		ID     func(childComplexity int) int
-		Phrase func(childComplexity int) int
+		Quote  func(childComplexity int) int
 	}
 }
 
 type QueryResolver interface {
-	Quotes(ctx context.Context) ([]*model.Quote, error)
+	RandomQuote(ctx context.Context) (*model.Quote, error)
+	QuoteByID(ctx context.Context, id *string) (*model.Quote, error)
 }
 
 type executableSchema struct {
@@ -72,12 +74,24 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
-	case "Query.quotes":
-		if e.complexity.Query.Quotes == nil {
+	case "Query.quoteById":
+		if e.complexity.Query.QuoteByID == nil {
 			break
 		}
 
-		return e.complexity.Query.Quotes(childComplexity), true
+		args, err := ec.field_Query_quoteById_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.QuoteByID(childComplexity, args["id"].(*string)), true
+
+	case "Query.randomQuote":
+		if e.complexity.Query.RandomQuote == nil {
+			break
+		}
+
+		return e.complexity.Query.RandomQuote(childComplexity), true
 
 	case "Quote.author":
 		if e.complexity.Quote.Author == nil {
@@ -93,12 +107,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Quote.ID(childComplexity), true
 
-	case "Quote.phrase":
-		if e.complexity.Quote.Phrase == nil {
+	case "Quote.quote":
+		if e.complexity.Quote.Quote == nil {
 			break
 		}
 
-		return e.complexity.Quote.Phrase(childComplexity), true
+		return e.complexity.Quote.Quote(childComplexity), true
 
 	}
 	return 0, false
@@ -156,14 +170,20 @@ var sources = []*ast.Source{
 #
 # https://gqlgen.com/getting-started/
 
+#Model of Quote object
 type Quote {
+  #UUID parsed to String that is unique for each Quote instance
   id: String!
+  #Author of the Quote instance phrase
   author: String!
-  phrase: String!
+  #Quote is the quote attributed to the author
+  quote: String!
 }
 
 type Query {
-  quotes: [Quote]
+  #Returns a random quote
+  randomQuote: Quote
+  quoteById(id: String): Quote
 }
 
 `, BuiltIn: false},
@@ -186,6 +206,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_quoteById_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -227,8 +262,8 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _Query_quotes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_quotes(ctx, field)
+func (ec *executionContext) _Query_randomQuote(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_randomQuote(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -241,7 +276,7 @@ func (ec *executionContext) _Query_quotes(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Quotes(rctx)
+		return ec.resolvers.Query().RandomQuote(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -250,12 +285,12 @@ func (ec *executionContext) _Query_quotes(ctx context.Context, field graphql.Col
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Quote)
+	res := resTmp.(*model.Quote)
 	fc.Result = res
-	return ec.marshalOQuote2ᚕᚖgithubᚗcomᚋjbutcher93ᚋquotesᚑstarterᚋgqlgenᚋgraphᚋmodelᚐQuote(ctx, field.Selections, res)
+	return ec.marshalOQuote2ᚖgithubᚗcomᚋjbutcher93ᚋquotesᚑstarterᚋgqlgenᚋgraphᚋmodelᚐQuote(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_quotes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_randomQuote(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -267,11 +302,71 @@ func (ec *executionContext) fieldContext_Query_quotes(ctx context.Context, field
 				return ec.fieldContext_Quote_id(ctx, field)
 			case "author":
 				return ec.fieldContext_Quote_author(ctx, field)
-			case "phrase":
-				return ec.fieldContext_Quote_phrase(ctx, field)
+			case "quote":
+				return ec.fieldContext_Quote_quote(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Quote", field.Name)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_quoteById(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_quoteById(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().QuoteByID(rctx, fc.Args["id"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Quote)
+	fc.Result = res
+	return ec.marshalOQuote2ᚖgithubᚗcomᚋjbutcher93ᚋquotesᚑstarterᚋgqlgenᚋgraphᚋmodelᚐQuote(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_quoteById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Quote_id(ctx, field)
+			case "author":
+				return ec.fieldContext_Quote_author(ctx, field)
+			case "quote":
+				return ec.fieldContext_Quote_quote(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Quote", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_quoteById_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -493,8 +588,8 @@ func (ec *executionContext) fieldContext_Quote_author(ctx context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Quote_phrase(ctx context.Context, field graphql.CollectedField, obj *model.Quote) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Quote_phrase(ctx, field)
+func (ec *executionContext) _Quote_quote(ctx context.Context, field graphql.CollectedField, obj *model.Quote) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Quote_quote(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -507,7 +602,7 @@ func (ec *executionContext) _Quote_phrase(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Phrase, nil
+		return obj.Quote, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -524,7 +619,7 @@ func (ec *executionContext) _Quote_phrase(ctx context.Context, field graphql.Col
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Quote_phrase(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Quote_quote(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Quote",
 		Field:      field,
@@ -2337,7 +2432,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
-		case "quotes":
+		case "randomQuote":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -2346,7 +2441,27 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_quotes(ctx, field)
+				res = ec._Query_randomQuote(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "quoteById":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_quoteById(ctx, field)
 				return res
 			}
 
@@ -2404,9 +2519,9 @@ func (ec *executionContext) _Quote(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "phrase":
+		case "quote":
 
-			out.Values[i] = ec._Quote_phrase(ctx, field, obj)
+			out.Values[i] = ec._Quote_quote(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -3047,47 +3162,6 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
-}
-
-func (ec *executionContext) marshalOQuote2ᚕᚖgithubᚗcomᚋjbutcher93ᚋquotesᚑstarterᚋgqlgenᚋgraphᚋmodelᚐQuote(ctx context.Context, sel ast.SelectionSet, v []*model.Quote) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalOQuote2ᚖgithubᚗcomᚋjbutcher93ᚋquotesᚑstarterᚋgqlgenᚋgraphᚋmodelᚐQuote(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	return ret
 }
 
 func (ec *executionContext) marshalOQuote2ᚖgithubᚗcomᚋjbutcher93ᚋquotesᚑstarterᚋgqlgenᚋgraphᚋmodelᚐQuote(ctx context.Context, sel ast.SelectionSet, v *model.Quote) graphql.Marshaler {

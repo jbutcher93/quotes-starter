@@ -4,16 +4,18 @@
 
 #Model of Quote object
 type Quote {
-  #UUID parsed to String that is unique for each Quote instace
+  #UUID parsed to String that is unique for each Quote instance
   id: String!
   #Author of the Quote instance phrase
   author: String!
-  #Phrase is the quote attributed to the author
-  phrase: String!
+  #Quote is the quote attributed to the author
+  quote: String!
 }
 
 type Query {
-  #Returns an array of all Quote instances
-  quotes: [Quote]
+  #Returns a random quote
+  randomQuote: Quote
+  #Returns a quote by id
+  quoteById(id: String): Quote
 }
 

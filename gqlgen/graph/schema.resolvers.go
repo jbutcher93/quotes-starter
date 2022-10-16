@@ -5,16 +5,31 @@ package graph
 
 import (
 	"context"
-	// "fmt"
+	"encoding/json"
+	"fmt"
+	"io"
 
 	"github.com/jbutcher93/quotes-starter/gqlgen/graph/generated"
 	"github.com/jbutcher93/quotes-starter/gqlgen/graph/model"
+	"github.com/jbutcher93/quotes-starter/helpers"
 )
 
-// Quotes is the resolver for the quotes field.
-func (r *queryResolver) Quotes(ctx context.Context) ([]*model.Quote, error) {
-	return r.quotes, nil
-	// panic(fmt.Errorf("not implemented: Quotes - quotes"))
+// RandomQuote is the resolver for the randomQuote field.
+func (r *queryResolver) RandomQuote(ctx context.Context) (*model.Quote, error) {
+	response := helpers.MakeRequest("http://0.0.0.0:8082/quotes", "GET")
+	responseData, _ := io.ReadAll(response.Body)
+	var randomQuote *model.Quote
+	json.Unmarshal(responseData, &randomQuote)
+	return randomQuote, nil
+}
+
+// QuoteByID is the resolver for the quoteById field.
+func (r *queryResolver) QuoteByID(ctx context.Context, id *string) (*model.Quote, error) {
+	response := helpers.MakeRequest(fmt.Sprintf("http://0.0.0.0:8082/quotes/%s", *id), "GET")
+	responseData, _ := io.ReadAll(response.Body)
+	var randomQuote *model.Quote
+	json.Unmarshal(responseData, &randomQuote)
+	return randomQuote, nil
 }
 
 // Query returns generated.QueryResolver implementation.
