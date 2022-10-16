@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 
 	"github.com/jbutcher93/quotes-starter/gqlgen/graph/generated"
 	"github.com/jbutcher93/quotes-starter/gqlgen/graph/model"
@@ -24,10 +23,17 @@ func (r *mutationResolver) InsertQuote(ctx context.Context, input *model.QuoteIn
 	}
 	postBody, _ := json.Marshal(&Quote)
 	responseBody := bytes.NewBuffer(postBody)
-	http.Post("http://0.0.0.0:8082/quotes", "application/json", responseBody)
-	// returnedJSON := helpers.MakeRequest("http://0.0.0.0:8082/quotes", "POST", responseBody)
-	// responseData, _ := io.ReadAll(returnedJSON.Body)
-	// json.Unmarshal(responseData, &Quote.ID)
+	response := helpers.MakeRequest("http://0.0.0.0:8082/quotes", "POST", responseBody)
+
+	/*
+		Getting back our newly created UUID and unmarshalling into our Quote instance
+		to share with user
+	*/
+	responseData, err := io.ReadAll(response.Body)
+	if err != nil {
+		fmt.Println(err)
+	}
+	json.Unmarshal(responseData, &Quote)
 	return Quote, nil
 }
 
