@@ -12,6 +12,13 @@ type Quote {
   quote: String!
 }
 
+type DeleteQuoteResponse {
+  #Similar to HTTP status code, represents the status of the mutation
+  code: Int!
+  #Human-readable message for UI
+  message: String!
+}
+
 type Query {
   #Returns a random quote
   randomQuote: Quote
@@ -25,5 +32,6 @@ input QuoteInput {
 }
 
 type Mutation {
-  insertQuote(input: QuoteInput): Quote
+  insertQuote(input: QuoteInput): Quote!
+  deleteQuote(id: String): DeleteQuoteResponse!
 }

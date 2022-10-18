@@ -37,6 +37,19 @@ func (r *mutationResolver) InsertQuote(ctx context.Context, input *model.QuoteIn
 	return Quote, nil
 }
 
+// DeleteQuote is the resolver for the deleteQuote field.
+func (r *mutationResolver) DeleteQuote(ctx context.Context, id *string) (*model.DeleteQuoteResponse, error) {
+	response := helpers.MakeRequest(fmt.Sprintf("http://0.0.0.0:8082/quotes/%s", *id), "DELETE", nil)
+	switch response.StatusCode {
+	case 204:
+		return &model.DeleteQuoteResponse{Code: 204, Message: "Delete successful"}, nil
+	case 400:
+		return &model.DeleteQuoteResponse{Code: 400, Message: "Delete unsuccessful"}, nil
+	default:
+		return &model.DeleteQuoteResponse{Code: 404, Message: "Error"}, nil
+	}
+}
+
 // RandomQuote is the resolver for the randomQuote field.
 func (r *queryResolver) RandomQuote(ctx context.Context) (*model.Quote, error) {
 	response := helpers.MakeRequest("http://0.0.0.0:8082/quotes", "GET", nil)

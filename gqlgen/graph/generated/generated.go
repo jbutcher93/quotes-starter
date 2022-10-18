@@ -43,7 +43,13 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	DeleteQuoteResponse struct {
+		Code    func(childComplexity int) int
+		Message func(childComplexity int) int
+	}
+
 	Mutation struct {
+		DeleteQuote func(childComplexity int, id *string) int
 		InsertQuote func(childComplexity int, input *model.QuoteInput) int
 	}
 
@@ -61,6 +67,7 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	InsertQuote(ctx context.Context, input *model.QuoteInput) (*model.Quote, error)
+	DeleteQuote(ctx context.Context, id *string) (*model.DeleteQuoteResponse, error)
 }
 type QueryResolver interface {
 	RandomQuote(ctx context.Context) (*model.Quote, error)
@@ -81,6 +88,32 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "DeleteQuoteResponse.code":
+		if e.complexity.DeleteQuoteResponse.Code == nil {
+			break
+		}
+
+		return e.complexity.DeleteQuoteResponse.Code(childComplexity), true
+
+	case "DeleteQuoteResponse.message":
+		if e.complexity.DeleteQuoteResponse.Message == nil {
+			break
+		}
+
+		return e.complexity.DeleteQuoteResponse.Message(childComplexity), true
+
+	case "Mutation.deleteQuote":
+		if e.complexity.Mutation.DeleteQuote == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteQuote_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteQuote(childComplexity, args["id"].(*string)), true
 
 	case "Mutation.insertQuote":
 		if e.complexity.Mutation.InsertQuote == nil {
@@ -217,6 +250,13 @@ type Quote {
   quote: String!
 }
 
+type DeleteQuoteResponse {
+  #Similar to HTTP status code, represents the status of the mutation
+  code: Int!
+  #Human-readable message for UI
+  message: String!
+}
+
 type Query {
   #Returns a random quote
   randomQuote: Quote
@@ -230,7 +270,8 @@ input QuoteInput {
 }
 
 type Mutation {
-  insertQuote(input: QuoteInput): Quote
+  insertQuote(input: QuoteInput): Quote!
+  deleteQuote(id: String): DeleteQuoteResponse!
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -238,6 +279,21 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_deleteQuote_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_insertQuote_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -322,6 +378,94 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
+func (ec *executionContext) _DeleteQuoteResponse_code(ctx context.Context, field graphql.CollectedField, obj *model.DeleteQuoteResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeleteQuoteResponse_code(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Code, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeleteQuoteResponse_code(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeleteQuoteResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeleteQuoteResponse_message(ctx context.Context, field graphql.CollectedField, obj *model.DeleteQuoteResponse) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeleteQuoteResponse_message(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Message, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeleteQuoteResponse_message(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeleteQuoteResponse",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_insertQuote(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_insertQuote(ctx, field)
 	if err != nil {
@@ -343,11 +487,14 @@ func (ec *executionContext) _Mutation_insertQuote(ctx context.Context, field gra
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Quote)
 	fc.Result = res
-	return ec.marshalOQuote2ᚖgithubᚗcomᚋjbutcher93ᚋquotesᚑstarterᚋgqlgenᚋgraphᚋmodelᚐQuote(ctx, field.Selections, res)
+	return ec.marshalNQuote2ᚖgithubᚗcomᚋjbutcher93ᚋquotesᚑstarterᚋgqlgenᚋgraphᚋmodelᚐQuote(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_insertQuote(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -376,6 +523,67 @@ func (ec *executionContext) fieldContext_Mutation_insertQuote(ctx context.Contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_insertQuote_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteQuote(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteQuote(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteQuote(rctx, fc.Args["id"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.DeleteQuoteResponse)
+	fc.Result = res
+	return ec.marshalNDeleteQuoteResponse2ᚖgithubᚗcomᚋjbutcher93ᚋquotesᚑstarterᚋgqlgenᚋgraphᚋmodelᚐDeleteQuoteResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteQuote(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "code":
+				return ec.fieldContext_DeleteQuoteResponse_code(ctx, field)
+			case "message":
+				return ec.fieldContext_DeleteQuoteResponse_message(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DeleteQuoteResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteQuote_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -2566,6 +2774,41 @@ func (ec *executionContext) unmarshalInputQuoteInput(ctx context.Context, obj in
 
 // region    **************************** object.gotpl ****************************
 
+var deleteQuoteResponseImplementors = []string{"DeleteQuoteResponse"}
+
+func (ec *executionContext) _DeleteQuoteResponse(ctx context.Context, sel ast.SelectionSet, obj *model.DeleteQuoteResponse) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, deleteQuoteResponseImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DeleteQuoteResponse")
+		case "code":
+
+			out.Values[i] = ec._DeleteQuoteResponse_code(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "message":
+
+			out.Values[i] = ec._DeleteQuoteResponse_message(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -2591,6 +2834,18 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_insertQuote(ctx, field)
 			})
 
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "deleteQuote":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteQuote(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3054,6 +3309,49 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNDeleteQuoteResponse2githubᚗcomᚋjbutcher93ᚋquotesᚑstarterᚋgqlgenᚋgraphᚋmodelᚐDeleteQuoteResponse(ctx context.Context, sel ast.SelectionSet, v model.DeleteQuoteResponse) graphql.Marshaler {
+	return ec._DeleteQuoteResponse(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNDeleteQuoteResponse2ᚖgithubᚗcomᚋjbutcher93ᚋquotesᚑstarterᚋgqlgenᚋgraphᚋmodelᚐDeleteQuoteResponse(ctx context.Context, sel ast.SelectionSet, v *model.DeleteQuoteResponse) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DeleteQuoteResponse(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) marshalNQuote2githubᚗcomᚋjbutcher93ᚋquotesᚑstarterᚋgqlgenᚋgraphᚋmodelᚐQuote(ctx context.Context, sel ast.SelectionSet, v model.Quote) graphql.Marshaler {
+	return ec._Quote(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNQuote2ᚖgithubᚗcomᚋjbutcher93ᚋquotesᚑstarterᚋgqlgenᚋgraphᚋmodelᚐQuote(ctx context.Context, sel ast.SelectionSet, v *model.Quote) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Quote(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
