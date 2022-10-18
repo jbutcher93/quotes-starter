@@ -500,6 +500,7 @@ func (ec *executionContext) _Mutation_insertQuote(ctx context.Context, field gra
 func (ec *executionContext) fieldContext_Mutation_insertQuote(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
+
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
@@ -605,6 +606,7 @@ func (ec *executionContext) _Query_randomQuote(ctx context.Context, field graphq
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().RandomQuote(rctx)
+
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -635,6 +637,17 @@ func (ec *executionContext) fieldContext_Query_randomQuote(ctx context.Context, 
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Quote", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_quoteById_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -3656,6 +3669,7 @@ func (ec *executionContext) marshalOQuote2ᚖgithubᚗcomᚋjbutcher93ᚋquotes�
 }
 
 func (ec *executionContext) unmarshalOQuoteInput2ᚖgithubᚗcomᚋjbutcher93ᚋquotesᚑstarterᚋgqlgenᚋgraphᚋmodelᚐQuoteInput(ctx context.Context, v interface{}) (*model.QuoteInput, error) {
+
 	if v == nil {
 		return nil, nil
 	}
