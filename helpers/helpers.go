@@ -13,3 +13,7 @@ func MakeRequest(auth string, url string, requestType string, body io.Reader) *h
 	response, _ := client.Do(req)
 	return response
 }
+
+func UnauthorizedResponse(r *http.Response) string {
+	return "error: " + r.Status
+}

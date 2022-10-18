@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 
@@ -27,6 +28,10 @@ func (r *mutationResolver) InsertQuote(ctx context.Context, input *model.QuoteIn
 	responseBody := bytes.NewBuffer(postBody)
 	response := helpers.MakeRequest(auth, "http://34.160.62.133:80/quotes", "POST", responseBody)
 
+	if response.StatusCode == 401 {
+		return nil, errors.New(helpers.UnauthorizedResponse(response))
+	}
+
 	/*
 		Getting back our newly created UUID and unmarshalling into our Quote instance
 		to share with user
@@ -44,6 +49,11 @@ func (r *mutationResolver) DeleteQuote(ctx context.Context, id *string) (*model.
 	auth := fmt.Sprint(ctx.Value("X-Api-Key"))
 
 	response := helpers.MakeRequest(auth, fmt.Sprintf("http://34.160.62.133:80/quotes/%s", *id), "DELETE", nil)
+
+	if response.StatusCode == 401 {
+		return nil, errors.New(helpers.UnauthorizedResponse(response))
+	}
+
 	switch response.StatusCode {
 	case 204:
 		return &model.DeleteQuoteResponse{Code: 204, Message: "Delete successful"}, nil
@@ -59,6 +69,11 @@ func (r *queryResolver) RandomQuote(ctx context.Context) (*model.Quote, error) {
 	auth := fmt.Sprint(ctx.Value("X-Api-Key"))
 
 	response := helpers.MakeRequest(auth, "http://34.160.62.133:80/quotes", "GET", nil)
+
+	if response.StatusCode == 401 {
+		return nil, errors.New(helpers.UnauthorizedResponse(response))
+	}
+
 	responseData, _ := io.ReadAll(response.Body)
 	var randomQuote *model.Quote
 	json.Unmarshal(responseData, &randomQuote)
@@ -70,6 +85,11 @@ func (r *queryResolver) QuoteByID(ctx context.Context, id *string) (*model.Quote
 	auth := fmt.Sprint(ctx.Value("X-Api-Key"))
 
 	response := helpers.MakeRequest(auth, fmt.Sprintf("http://34.160.62.133:80/quotes/%s", *id), "GET", nil)
+
+	if response.StatusCode == 401 {
+		return nil, errors.New(helpers.UnauthorizedResponse(response))
+	}
+
 	responseData, _ := io.ReadAll(response.Body)
 	var randomQuote *model.Quote
 	json.Unmarshal(responseData, &randomQuote)
