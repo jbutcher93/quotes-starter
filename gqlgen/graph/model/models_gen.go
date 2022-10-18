@@ -2,8 +2,18 @@
 
 package model
 
+type DeleteQuoteResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
 type Quote struct {
-	ID     string `json:"id"`
+	ID     *string `json:"id"`
+	Author string  `json:"author"`
+	Quote  string  `json:"quote"`
+}
+
+type QuoteInput struct {
 	Author string `json:"author"`
 	Quote  string `json:"quote"`
 }
