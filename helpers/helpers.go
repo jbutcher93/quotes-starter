@@ -1,12 +1,15 @@
 package helpers
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 )
 
-func MakeRequest(auth string, url string, requestType string, body io.Reader) *http.Response {
+func MakeRequest(ctx context.Context, url string, requestType string, body io.Reader) *http.Response {
+	auth := fmt.Sprint(ctx.Value("X-Api-Key"))
 	client := &http.Client{}
 	req, _ := http.NewRequest(requestType, url, body)
 	req.Header.Set("X-Api-Key", auth)
