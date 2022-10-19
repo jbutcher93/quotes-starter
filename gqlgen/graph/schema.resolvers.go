@@ -47,7 +47,7 @@ func (r *mutationResolver) DeleteQuote(ctx context.Context, id *string) (*model.
 	case 401:
 		return &model.DeleteQuoteResponse{Code: 401, Message: "Unauthorized"}, nil
 	default:
-		return &model.DeleteQuoteResponse{Code: 404, Message: "Error"}, nil
+		return &model.DeleteQuoteResponse{Code: response.StatusCode, Message: "Error"}, nil
 	}
 }
 
