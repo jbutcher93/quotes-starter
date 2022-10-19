@@ -18,19 +18,19 @@ import (
 func (r *mutationResolver) InsertQuote(ctx context.Context, input *model.QuoteInput) (*model.Quote, error) {
 	auth := fmt.Sprint(ctx.Value("X-Api-Key"))
 
-	Quote := &model.Quote{
+	postedQuote := &model.Quote{
 		Author: input.Author,
 		Quote:  input.Quote,
 	}
-	postBody, _ := json.Marshal(&Quote)
+	postBody, _ := json.Marshal(&postedQuote)
 	responseBody := bytes.NewBuffer(postBody)
 	response := helpers.MakeRequest(auth, "http://34.160.62.133:80/quotes", "POST", responseBody)
 	responseData, err := helpers.HandleResponse(response)
 	if err != nil {
 		return nil, err
 	}
-	json.Unmarshal(responseData, &Quote)
-	return Quote, nil
+	json.Unmarshal(responseData, &postedQuote)
+	return postedQuote, nil
 }
 
 // DeleteQuote is the resolver for the deleteQuote field.
@@ -73,9 +73,9 @@ func (r *queryResolver) QuoteByID(ctx context.Context, id *string) (*model.Quote
 	if err != nil {
 		return nil, err
 	}
-	var randomQuote *model.Quote
-	json.Unmarshal(responseData, &randomQuote)
-	return randomQuote, nil
+	var quoteByID *model.Quote
+	json.Unmarshal(responseData, &quoteByID)
+	return quoteByID, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.
