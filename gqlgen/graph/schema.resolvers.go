@@ -7,9 +7,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 
 	"github.com/jbutcher93/quotes-starter/gqlgen/graph/generated"
 	"github.com/jbutcher93/quotes-starter/gqlgen/graph/model"
@@ -27,18 +25,9 @@ func (r *mutationResolver) InsertQuote(ctx context.Context, input *model.QuoteIn
 	postBody, _ := json.Marshal(&Quote)
 	responseBody := bytes.NewBuffer(postBody)
 	response := helpers.MakeRequest(auth, "http://34.160.62.133:80/quotes", "POST", responseBody)
-
-	if response.StatusCode == 401 {
-		return nil, errors.New(helpers.UnauthorizedResponse(response))
-	}
-
-	/*
-		Getting back our newly created UUID and unmarshalling into our Quote instance
-		to share with user
-	*/
-	responseData, err := io.ReadAll(response.Body)
+	responseData, err := helpers.HandleResponse(response)
 	if err != nil {
-		fmt.Println(err)
+		return nil, err
 	}
 	json.Unmarshal(responseData, &Quote)
 	return Quote, nil
@@ -50,15 +39,13 @@ func (r *mutationResolver) DeleteQuote(ctx context.Context, id *string) (*model.
 
 	response := helpers.MakeRequest(auth, fmt.Sprintf("http://34.160.62.133:80/quotes/%s", *id), "DELETE", nil)
 
-	if response.StatusCode == 401 {
-		return nil, errors.New(helpers.UnauthorizedResponse(response))
-	}
-
 	switch response.StatusCode {
 	case 204:
 		return &model.DeleteQuoteResponse{Code: 204, Message: "Delete successful"}, nil
 	case 400:
 		return &model.DeleteQuoteResponse{Code: 400, Message: "Delete unsuccessful"}, nil
+	case 401:
+		return &model.DeleteQuoteResponse{Code: 401, Message: "Unauthorized"}, nil
 	default:
 		return &model.DeleteQuoteResponse{Code: 404, Message: "Error"}, nil
 	}
@@ -67,14 +54,11 @@ func (r *mutationResolver) DeleteQuote(ctx context.Context, id *string) (*model.
 // RandomQuote is the resolver for the randomQuote field.
 func (r *queryResolver) RandomQuote(ctx context.Context) (*model.Quote, error) {
 	auth := fmt.Sprint(ctx.Value("X-Api-Key"))
-
 	response := helpers.MakeRequest(auth, "http://34.160.62.133:80/quotes", "GET", nil)
-
-	if response.StatusCode == 401 {
-		return nil, errors.New(helpers.UnauthorizedResponse(response))
+	responseData, err := helpers.HandleResponse(response)
+	if err != nil {
+		return nil, err
 	}
-
-	responseData, _ := io.ReadAll(response.Body)
 	var randomQuote *model.Quote
 	json.Unmarshal(responseData, &randomQuote)
 	return randomQuote, nil
@@ -85,12 +69,10 @@ func (r *queryResolver) QuoteByID(ctx context.Context, id *string) (*model.Quote
 	auth := fmt.Sprint(ctx.Value("X-Api-Key"))
 
 	response := helpers.MakeRequest(auth, fmt.Sprintf("http://34.160.62.133:80/quotes/%s", *id), "GET", nil)
-
-	if response.StatusCode == 401 {
-		return nil, errors.New(helpers.UnauthorizedResponse(response))
+	responseData, err := helpers.HandleResponse(response)
+	if err != nil {
+		return nil, err
 	}
-
-	responseData, _ := io.ReadAll(response.Body)
 	var randomQuote *model.Quote
 	json.Unmarshal(responseData, &randomQuote)
 	return randomQuote, nil

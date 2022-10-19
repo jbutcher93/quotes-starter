@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"errors"
 	"io"
 	"net/http"
 )
@@ -14,6 +15,11 @@ func MakeRequest(auth string, url string, requestType string, body io.Reader) *h
 	return response
 }
 
-func UnauthorizedResponse(r *http.Response) string {
-	return "error: " + r.Status
+func HandleResponse(r *http.Response) ([]byte, error) {
+	if r.StatusCode == 401 {
+		return nil, errors.New("error: " + r.Status)
+	} else {
+		responseData, _ := io.ReadAll(r.Body)
+		return responseData, nil
+	}
 }
