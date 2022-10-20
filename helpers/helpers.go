@@ -25,7 +25,7 @@ func MakeRequest(ctx context.Context, url string, requestType string, body io.Re
 }
 
 func HandleResponse(r *http.Response) ([]byte, error) {
-	if r.StatusCode == 401 || r.StatusCode == 404 {
+	if r.StatusCode > 299 {
 		return nil, errors.New("error: " + r.Status)
 	}
 	{
