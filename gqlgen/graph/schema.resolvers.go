@@ -20,9 +20,15 @@ func (r *mutationResolver) InsertQuote(ctx context.Context, input *model.QuoteIn
 		Author: input.Author,
 		Quote:  input.Quote,
 	}
-	postBody, _ := json.Marshal(&postedQuote)
+	postBody, err := json.Marshal(&postedQuote)
+	if err != nil {
+		return nil, err
+	}
 	responseBody := bytes.NewBuffer(postBody)
-	response := helpers.MakeRequest(ctx, "http://34.160.62.133:80/quotes", "POST", responseBody)
+	response, err := helpers.MakeRequest(ctx, "http://34.160.62.133:80/quotes", "POST", responseBody)
+	if err != nil {
+		return nil, err
+	}
 	responseData, err := helpers.HandleResponse(response)
 	if err != nil {
 		return nil, err
@@ -33,7 +39,10 @@ func (r *mutationResolver) InsertQuote(ctx context.Context, input *model.QuoteIn
 
 // DeleteQuote is the resolver for the deleteQuote field.
 func (r *mutationResolver) DeleteQuote(ctx context.Context, id *string) (*model.DeleteQuoteResponse, error) {
-	response := helpers.MakeRequest(ctx, fmt.Sprintf("http://34.160.62.133:80/quotes/%s", *id), "DELETE", nil)
+	response, err := helpers.MakeRequest(ctx, fmt.Sprintf("http://34.160.62.133:80/quotes/%s", *id), "DELETE", nil)
+	if err != nil {
+		return nil, err
+	}
 
 	switch response.StatusCode {
 	case 204:
@@ -49,7 +58,10 @@ func (r *mutationResolver) DeleteQuote(ctx context.Context, id *string) (*model.
 
 // RandomQuote is the resolver for the randomQuote field.
 func (r *queryResolver) RandomQuote(ctx context.Context) (*model.Quote, error) {
-	response := helpers.MakeRequest(ctx, "http://34.160.62.133:80/quotes", "GET", nil)
+	response, err := helpers.MakeRequest(ctx, "http://34.160.62.133:80/quotes", "GET", nil)
+	if err != nil {
+		return nil, err
+	}
 	responseData, err := helpers.HandleResponse(response)
 	if err != nil {
 		return nil, err
@@ -61,7 +73,10 @@ func (r *queryResolver) RandomQuote(ctx context.Context) (*model.Quote, error) {
 
 // QuoteByID is the resolver for the quoteById field.
 func (r *queryResolver) QuoteByID(ctx context.Context, id *string) (*model.Quote, error) {
-	response := helpers.MakeRequest(ctx, fmt.Sprintf("http://34.160.62.133:80/quotes/%s", *id), "GET", nil)
+	response, err := helpers.MakeRequest(ctx, fmt.Sprintf("http://34.160.62.133:80/quotes/%s", *id), "GET", nil)
+	if err != nil {
+		return nil, err
+	}
 	responseData, err := helpers.HandleResponse(response)
 	if err != nil {
 		return nil, err
