@@ -7,7 +7,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 
 	"github.com/jbutcher93/quotes-starter/gqlgen/graph/generated"
 	"github.com/jbutcher93/quotes-starter/gqlgen/graph/model"
@@ -29,9 +31,16 @@ func (r *mutationResolver) InsertQuote(ctx context.Context, input *model.QuoteIn
 	if err != nil {
 		return nil, err
 	}
-	responseData, err := helpers.HandleResponse(response)
+	responseData, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, err
+	}
+	if response.StatusCode != 201 {
+		errorMessage := &struct {
+			Message string `json:"message"`
+		}{}
+		json.Unmarshal(responseData, &errorMessage)
+		return nil, errors.New(errorMessage.Message)
 	}
 	json.Unmarshal(responseData, &postedQuote)
 	return postedQuote, nil
