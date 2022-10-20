@@ -37,7 +37,7 @@ func (r *mutationResolver) InsertQuote(ctx context.Context, input *model.QuoteIn
 			return nil, errors.New(errorMessage.Message)
 		}
 		json.Unmarshal(responseData, &postedQuote)
-		return postedQuote, err
+		return postedQuote, nil
 	}
 	return nil, err
 }
