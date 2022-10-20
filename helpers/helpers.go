@@ -22,7 +22,7 @@ func HandleResponse(r *http.Response) ([]byte, error) {
 	if r.StatusCode == 401 {
 		return nil, errors.New("error: " + r.Status)
 	} else {
-		responseData, _ := io.ReadAll(r.Body)
-		return responseData, nil
+		responseData, err := io.ReadAll(r.Body)
+		return responseData, err
 	}
 }
