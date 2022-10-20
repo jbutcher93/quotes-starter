@@ -18,32 +18,28 @@ import (
 
 // InsertQuote is the resolver for the insertQuote field.
 func (r *mutationResolver) InsertQuote(ctx context.Context, input *model.QuoteInput) (*model.Quote, error) {
-	postedQuote := &model.Quote{
-		Author: input.Author,
-		Quote:  input.Quote,
+	var err error
+	for err == nil {
+		postedQuote := &model.Quote{
+			Author: input.Author,
+			Quote:  input.Quote,
+		}
+		postBody, err := json.Marshal(&postedQuote)
+		responseBody := bytes.NewBuffer(postBody)
+		response, err := helpers.MakeRequest(ctx, "http://34.160.62.133:80/quotes", "POST", responseBody)
+		responseData, err := io.ReadAll(response.Body)
+
+		if response.StatusCode != 201 {
+			errorMessage := &struct {
+				Message string `json:"message"`
+			}{}
+			json.Unmarshal(responseData, &errorMessage)
+			return nil, errors.New(errorMessage.Message)
+		}
+		json.Unmarshal(responseData, &postedQuote)
+		return postedQuote, err
 	}
-	postBody, err := json.Marshal(&postedQuote)
-	if err != nil {
-		return nil, err
-	}
-	responseBody := bytes.NewBuffer(postBody)
-	response, err := helpers.MakeRequest(ctx, "http://34.160.62.133:80/quotes", "POST", responseBody)
-	if err != nil {
-		return nil, err
-	}
-	responseData, err := io.ReadAll(response.Body)
-	if err != nil {
-		return nil, err
-	}
-	if response.StatusCode != 201 {
-		errorMessage := &struct {
-			Message string `json:"message"`
-		}{}
-		json.Unmarshal(responseData, &errorMessage)
-		return nil, errors.New(errorMessage.Message)
-	}
-	json.Unmarshal(responseData, &postedQuote)
-	return postedQuote, nil
+	return nil, err
 }
 
 // DeleteQuote is the resolver for the deleteQuote field.
