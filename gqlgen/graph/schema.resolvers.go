@@ -52,7 +52,6 @@ func (r *mutationResolver) DeleteQuote(ctx context.Context, id *string) (*model.
 	if err != nil {
 		return nil, err
 	}
-
 	switch response.StatusCode {
 	case 204:
 		return &model.DeleteQuoteResponse{Code: 204, Message: "Delete successful"}, nil
